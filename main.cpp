@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -29,14 +30,30 @@ const MenuItem_T MENU[] = {{"Kiaušiniene", 1.45},
 
 const int MENU_SIZE = size(MENU);
 
+string doubleToStr(double value) {
+	ostringstream stream;
+	stream << fixed << setprecision(2) << value;
+	return stream.str();
+}
+
+string repeatChar(char symbol, int count) {
+	string result;
+	for (int i = 0; i < count; i++) {
+		result += symbol;
+	}
+	return result;
+}
+
 void showMenu() {
-	cout << "\n------------------ Mūsų meniu ------------------\n";
-	cout << fixed << setprecision(2);
+	cout << "\n------------------ Mūsų meniu ------------------\n\n";
+
 	cout << pad_utf8("Patiekalas", 43) << pad_utf8("Kaina", 5) << '\n';
+	cout << pad_utf8(repeatChar('-', 10), 43) << repeatChar('-', 5) << '\n';
+
 	for (int i = 0; i < MENU_SIZE; i++) {
 		MenuItem_T item = MENU[i];
-		string itemPrice = to_string(item.itemPrice).substr(0, 4);
-		cout << i + 1 << ". " << pad_utf8(MENU[i].menuItem, 40) << pad_utf8(itemPrice, 4) << EURO_SIGN << '\n';
+		string price = doubleToStr(item.itemPrice);
+		cout << i + 1 << ". " << pad_utf8(MENU[i].menuItem, 40) << pad_utf8(price, 4) << EURO_SIGN << '\n';
 	}
 }
 
@@ -87,12 +104,15 @@ bool getData(MenuItem_T menuList[], int &lastOrderIndex) {
 }
 
 void printCheck(MenuItem_T menuList[]) {
+	string bill;
+
 	double sum = 0;
 	double pvm = 0;
 	double finalSum = 0;
 
-	cout << "\n-------------------------------- Jūsų užsakymas --------------------------------\n\n";
-	cout << pad_utf8("Patiekalas", 40) << pad_utf8("Vienos porcijos kaina", 25) << "Užsakyta porcijų\n";
+	bill += "\n-------------------------------- Jūsų užsakymas --------------------------------\n\n";
+	bill += pad_utf8("Patiekalas", 40) + pad_utf8("Vienos porcijos kaina", 25) + "Užsakyta porcijų\n";
+	bill += pad_utf8(repeatChar('-', 10), 40) + pad_utf8(repeatChar('-', 21), 25) + repeatChar('-', 16) + '\n';
 
 	for (int i = 0; i < MAX_ORDER_COUNT; i++) {
 		MenuItem_T item = menuList[i];
@@ -101,22 +121,37 @@ void printCheck(MenuItem_T menuList[]) {
 			break;
 		}
 
-		string price = to_string(item.itemPrice).substr(0, 4) + EURO_SIGN;
+		string price = doubleToStr(item.itemPrice) + EURO_SIGN;
 		string amount = to_string(item.amount) + " porcija(-os)";
 
-		sum += (item.itemPrice * item.amount);
+		bill += pad_utf8(item.menuItem, 40) + pad_utf8(price, 25) + amount + '\n';
 
-		cout << pad_utf8(item.menuItem, 40) << pad_utf8(price, 25) << amount << '\n';
+		sum += (item.itemPrice * item.amount);
 	}
 
 	pvm = sum * PVM;
 	finalSum = sum + pvm;
 
-	cout << "\n------------ Sąskaita ------------\n";
-	cout << fixed << setprecision(2);
-	cout << pad_utf8("Kaina be PVM", 27) << sum << EURO_SIGN << '\n';
-	cout << pad_utf8("PVM suma", 27) << pvm << EURO_SIGN << '\n';
-	cout << pad_utf8("Galutinė kaina (su PVM)", 27) << finalSum << EURO_SIGN << '\n';
+	string sum_str = doubleToStr(sum) + EURO_SIGN;
+	string pvm_str = doubleToStr(pvm) + EURO_SIGN;
+	string finalSum_str = doubleToStr(finalSum) + EURO_SIGN;
+
+	bill += "\n------------ Sąskaita ------------\n";
+	bill += pad_utf8("Kaina be PVM", 27) + sum_str + '\n';
+	bill += pad_utf8("PVM suma", 27) + pvm_str + '\n';
+	bill += pad_utf8("Galutinė kaina (su PVM)", 27) + finalSum_str + '\n';
+
+	// saskaitos irasymas i faila
+	ofstream billFile("saskaita.txt");
+	if (billFile.is_open()) {
+		billFile << bill;
+		billFile.close();
+	} else {
+		cerr << "Error: Could not open file for writing.\n";
+	}
+
+	// saskaitos isvedimas i konsole
+	cout << bill;
 }
 
 int main() {
