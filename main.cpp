@@ -3,12 +3,13 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include "utf8.hpp"
 
 using namespace std;
 
 const int MAX_ORDER_COUNT = 20;
 const string RES_NAME = "Du skoniai";
-const string EURO_SIGN = "€";
+const string EURO_SIGN = " €";
 const string DELIM = " | ";
 const double PVM = 0.21;
 
@@ -30,9 +31,13 @@ const MenuItem_T MENU[] = {{"Kiaušiniene", 1.45},
 const int MENU_SIZE = size(MENU);
 
 void showMenu() {
-	cout << "\n----- Mūsų meniu -----\n";
+	cout << "\n------------------ Mūsų meniu ------------------\n";
+	cout << fixed << setprecision(2);
+	cout << pad_utf8("Patiekalas", 43) << pad_utf8("Kaina", 5) << '\n';
 	for (int i = 0; i < MENU_SIZE; i++) {
-		cout << i + 1 << ". " << MENU[i].menuItem << DELIM << MENU[i].itemPrice << ' ' << EURO_SIGN << '\n';
+		MenuItem_T item = MENU[i];
+		string itemPrice = to_string(item.itemPrice).substr(0, 4);
+		cout << i + 1 << ". " << pad_utf8(MENU[i].menuItem, 40) << pad_utf8(itemPrice, 4) << EURO_SIGN << '\n';
 	}
 }
 
@@ -57,7 +62,17 @@ bool getData(MenuItem_T menuList[], int &lastOrderIndex) {
 	int count = 1;
 
 	cout << "Jūsų pasirinkimas (patiekalas, porcijos): ";
-	cin >> order >> count;
+
+	cin >> order;
+	if (order == 0) {
+		return false;
+	}
+
+	cin >> count;
+	if (count < 1) {
+		cout << "Įvestas klaidingas porcijų skaičius.\n";
+		return false;
+	}
 
 	if (order >= 1 && order <= MENU_SIZE) {
 		order--;
@@ -77,25 +92,32 @@ void printCheck(MenuItem_T menuList[]) {
 	double pvm = 0;
 	double finalSum = 0;
 
-	cout << "\n---- Jūsų užsakymas ----\n";
+	cout << "\n-------------------------------- Jūsų užsakymas --------------------------------\n\n";
+	cout << pad_utf8("Patiekalas", 40) << pad_utf8("Vienos porcijos kaina", 25) << "Užsakyta porcijų\n";
+
 	for (int i = 0; i < MAX_ORDER_COUNT; i++) {
 		MenuItem_T item = menuList[i];
+
 		if (item.menuItem.empty()) {
 			break;
 		}
+
+		string price = to_string(item.itemPrice).substr(0, 4) + EURO_SIGN;
+		string amount = to_string(item.amount) + " porcija(-os)";
+
 		sum += (item.itemPrice * item.amount);
-		cout << item.menuItem << DELIM << item.itemPrice << ' ' << EURO_SIGN << DELIM << item.amount << " porcija(-os)"
-		     << '\n';
+
+		cout << pad_utf8(item.menuItem, 40) << pad_utf8(price, 25) << amount << '\n';
 	}
 
 	pvm = sum * PVM;
 	finalSum = sum + pvm;
 
-	cout << "\n---- Sąskaita ----\n";
+	cout << "\n------------ Sąskaita ------------\n";
 	cout << fixed << setprecision(2);
-	cout << "Kaina be PVM: " << sum << ' ' << EURO_SIGN << '\n';
-	cout << "PVM suma: " << pvm << ' ' << EURO_SIGN << '\n';
-	cout << "Galutinė kaina (su PVM): " << finalSum << ' ' << EURO_SIGN << '\n';
+	cout << pad_utf8("Kaina be PVM", 27) << sum << EURO_SIGN << '\n';
+	cout << pad_utf8("PVM suma", 27) << pvm << EURO_SIGN << '\n';
+	cout << pad_utf8("Galutinė kaina (su PVM)", 27) << finalSum << EURO_SIGN << '\n';
 }
 
 int main() {
