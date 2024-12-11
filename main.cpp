@@ -4,7 +4,6 @@
 #include <iostream>
 #include <iterator>
 #include <string>
-#include "utf8.hpp"
 
 using namespace std;
 
@@ -42,6 +41,41 @@ string repeatChar(char symbol, int count) {
 		result += symbol;
 	}
 	return result;
+}
+
+// Function to calculate the visual width of a UTF-8 string
+size_t utf8_visual_width(const string &str) {
+	size_t width = 0;
+	for (size_t i = 0; i < str.size();) {
+		unsigned char symbol = str[i];
+		if ((symbol & 0x80) == 0) { // 1-byte character (ASCII)
+			width += 1;
+			i += 1;
+		} else if ((symbol & 0xE0) == 0xC0) { // 2-byte character
+			width += 1;
+			i += 2;
+		} else if ((symbol & 0xF0) == 0xE0) { // 3-byte character
+			width += 1;
+			i += 3;
+		} else if ((symbol & 0xF8) == 0xF0) { // 4-byte character
+			width += 2; // Wide character
+			i += 4;
+		} else {
+			throw runtime_error("Invalid UTF-8 sequence");
+		}
+	}
+	return width;
+}
+
+// Function to pad a UTF-8 string to a specific width
+string pad_utf8(const string &str, size_t width) {
+	size_t visual_width = utf8_visual_width(str);
+	if (visual_width >= width) {
+		return str;
+	}
+
+	// Add spaces to reach the desired width
+	return str + string(width - visual_width, ' ');
 }
 
 void showMenu() {
@@ -110,9 +144,9 @@ void printCheck(MenuItem_T menuList[]) {
 	double pvm = 0;
 	double finalSum = 0;
 
-	bill += "\n-------------------------------- Jūsų užsakymas --------------------------------\n\n";
-	bill += pad_utf8("Patiekalas", 40) + pad_utf8("Vienos porcijos kaina", 25) + "Užsakyta porcijų\n";
-	bill += pad_utf8(repeatChar('-', 10), 40) + pad_utf8(repeatChar('-', 21), 25) + repeatChar('-', 16) + '\n';
+	bill += "\n----------------------------- Jūsų užsakymas -----------------------------\n\n";
+	bill += pad_utf8("Patiekalas", 40) + pad_utf8("Porcijos kaina", 18) + "Užsakyta porcijų\n";
+	bill += pad_utf8(repeatChar('-', 10), 40) + pad_utf8(repeatChar('-', 14), 18) + repeatChar('-', 16) + '\n';
 
 	for (int i = 0; i < MAX_ORDER_COUNT; i++) {
 		MenuItem_T item = menuList[i];
@@ -124,7 +158,7 @@ void printCheck(MenuItem_T menuList[]) {
 		string price = doubleToStr(item.itemPrice) + EURO_SIGN;
 		string amount = to_string(item.amount) + " porcija(-os)";
 
-		bill += pad_utf8(item.menuItem, 40) + pad_utf8(price, 25) + amount + '\n';
+		bill += pad_utf8(item.menuItem, 40) + pad_utf8(price, 18) + amount + '\n';
 
 		sum += (item.itemPrice * item.amount);
 	}
