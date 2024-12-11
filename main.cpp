@@ -10,7 +10,6 @@ using namespace std;
 const int MAX_ORDER_COUNT = 20;
 const string RES_NAME = "Du skoniai";
 const string EURO_SIGN = " €";
-const string DELIM = " | ";
 const double PVM = 0.21;
 
 struct MenuItem_T {
