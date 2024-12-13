@@ -205,7 +205,7 @@ int main() {
 				showMenu();
 				break;
 			case 2:
-				cout << '\n';
+				cout << "\n(Įveskite 0 kad išeitumėte iš užsakymo režimo)\n\n";
 				while (orderSuccess) {
 					orderSuccess = getData(menuList, lastOrderListItem);
 				}
