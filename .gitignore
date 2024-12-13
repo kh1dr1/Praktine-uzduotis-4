@@ -55,3 +55,6 @@ cmake-build-*/
 
 # Clang language server cache
 .cache/
+
+# Project local files
+saskaita.txt
